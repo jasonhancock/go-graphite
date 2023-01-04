@@ -9,8 +9,6 @@ import (
 	"path"
 	"strconv"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Doer is an abstraction around an http client.
@@ -44,23 +42,23 @@ func (c *Client) Render(ctx context.Context, r RenderRequest) (RenderResponse, e
 
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
-		return RenderResponse{}, errors.Wrap(err, "constructing request")
+		return RenderResponse{}, fmt.Errorf("constructing request: %w", err)
 	}
 	req = req.WithContext(ctx)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return RenderResponse{}, errors.Wrap(err, "executing request")
+		return RenderResponse{}, fmt.Errorf("executing request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return RenderResponse{}, errors.Errorf("unexpected status code %d", resp.StatusCode)
+		return RenderResponse{}, fmt.Errorf("unexpected status code %d", resp.StatusCode)
 	}
 
 	var data []Series
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return RenderResponse{}, errors.Wrap(err, "decoding response")
+		return RenderResponse{}, fmt.Errorf("decoding response: %w", err)
 	}
 	return RenderResponse{Series: data}, nil
 }
